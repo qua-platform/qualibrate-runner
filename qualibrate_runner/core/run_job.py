@@ -1,9 +1,11 @@
 import traceback
 from datetime import datetime
-from typing import Any, Mapping, Type
+from typing import Any, Mapping, Optional, Type, cast
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ValidationError
+from qualibrate.models.run_summary.graph import GraphRunSummary
+from qualibrate.models.run_summary.node import NodeRunSummary
 from qualibrate.qualibration_graph import QualibrationGraph
 from qualibrate.qualibration_library import QualibrationLibrary
 from qualibrate.qualibration_node import QualibrationNode
@@ -64,15 +66,15 @@ def run_node(
         run_status = RunStatus.ERROR
         raise
     else:
-        idx = node.snapshot_idx if hasattr(node, "snapshot_idx") else -1
-        idx = idx if idx is not None else -1
+        _idx = node.snapshot_idx if hasattr(node, "snapshot_idx") else -1
+        idx = idx if _idx is not None else -1
         run_status = RunStatus.FINISHED
     finally:
         state.last_run = LastRun(
             name=state.last_run.name,
             status=run_status,
             idx=idx,
-            run_result=node.run_summary,
+            run_result=cast(Optional[NodeRunSummary], node.run_summary),
             runnable_type=state.last_run.runnable_type,
             passed_parameters=passed_input_parameters,
             started_at=state.last_run.started_at,
@@ -126,7 +128,7 @@ def run_workflow(
             name=state.last_run.name,
             status=run_status,
             idx=idx,
-            run_result=workflow.run_summary,
+            run_result=cast(Optional[GraphRunSummary], workflow.run_summary),
             started_at=state.last_run.started_at,
             completed_at=datetime.now(),
             runnable_type=state.last_run.runnable_type,
