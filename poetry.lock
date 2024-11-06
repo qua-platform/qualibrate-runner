@@ -1951,6 +1951,27 @@ datahandler = ["xarray (>=2023.0.0,<2024.0.0)"]
 interplot = ["dill (>=0.3.4,<0.4.0)", "ipython (>=8.10.0,<9.0.0)", "pypiwin32 (>=223,<224)"]
 
 [[package]]
+name = "qualibrate-config"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = "^3.9"
+files = []
+develop = true
+
+[package.dependencies]
+click = "^8.1.7"
+jsonpatch = "^1.33"
+pydantic = "^2.9.2"
+pydantic-settings = "^2.6.1"
+tomli = {version = "^2.0.1", markers = "python_version < \"3.11\""}
+tomli-w = "^1.0.0"
+
+[package.source]
+type = "directory"
+url = "../qualibrate-config"
+
+[[package]]
 name = "qualibrate-core"
 version = "0.2.3"
 description = ""
@@ -2315,4 +2336,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "91d16249b5f4468c0f7d423fa0bc3ce671c475700ae121d472831f3778892c6b"
+content-hash = "745cbb4fdc18c77334c07cac182d461c3cf7f5d76dbf34aa6a63c547b3bd7f8c"

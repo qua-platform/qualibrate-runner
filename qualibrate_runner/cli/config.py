@@ -7,17 +7,17 @@ from typing import Any
 import click
 import tomli_w
 from click.core import ParameterSource
+from qualibrate_config.file import get_config_file
+from qualibrate_config.validation import get_config_model_or_print_error
+from qualibrate_config.vars import DEFAULT_CONFIG_FILENAME, QUALIBRATE_PATH
 
 from qualibrate_runner.config import (
     CONFIG_KEY as QUALIBRATE_RUNNER_CONFIG_KEY,
 )
 from qualibrate_runner.config import (
-    DEFAULT_CONFIG_FILENAME,
-    QUALIBRATE_PATH,
+    DEFAULT_QUALIBRATE_RUNNER_CONFIG_FILENAME,
     QualibrateRunnerSettings,
-    get_config_file,
 )
-from qualibrate_runner.config.validation import get_config_model_or_print_error
 
 if sys.version_info[:2] < (3, 11):
     import tomli as tomllib
@@ -36,7 +36,11 @@ def not_default(ctx: click.Context, arg_key: str) -> bool:
 
 def get_config(config_path: Path) -> tuple[dict[str, Any], Path]:
     """Returns config and path to file"""
-    config_file = get_config_file(config_path, raise_not_exists=False)
+    config_file = get_config_file(
+        config_path=config_path,
+        default_config_specific_filename=DEFAULT_QUALIBRATE_RUNNER_CONFIG_FILENAME,
+        raise_not_exists=False,
+    )
     if config_file.is_file():
         return tomllib.loads(config_file.read_text()), config_path
     return {}, config_file
@@ -156,7 +160,11 @@ def config_command(
     )
     runner_config = _config_from_sources(ctx, runner_config)
 
-    qrs = get_config_model_or_print_error(runner_config)
+    qrs = get_config_model_or_print_error(
+        runner_config,
+        QualibrateRunnerSettings,
+        QUALIBRATE_RUNNER_CONFIG_KEY,
+    )
     if qrs is None:
         return
     write_config(config_file, common_config, qrs, confirm=not auto_accept)
