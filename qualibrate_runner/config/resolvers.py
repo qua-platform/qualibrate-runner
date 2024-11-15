@@ -5,10 +5,8 @@ from typing import Annotated
 
 from fastapi import Depends
 from qualibrate_config.file import get_config_file
-from qualibrate_config.validation import (
-    get_config_model_or_print_error,
-    get_config_solved_references_or_print_error,
-)
+from qualibrate_config.resolvers import get_config_model
+from qualibrate_config.storage import STORAGE
 
 from qualibrate_runner.config.models import QualibrateRunnerSettings
 from qualibrate_runner.config.vars import (
@@ -36,12 +34,9 @@ def get_config_path() -> Path:
 def get_settings(
     config_path: Annotated[Path, Depends(get_config_path)],
 ) -> QualibrateRunnerSettings:
-    config = get_config_solved_references_or_print_error(config_path)
-    if config is None:
-        raise RuntimeError("Couldn't read config file")
-    qrs = get_config_model_or_print_error(
-        config.get(CONFIG_KEY, {}), QualibrateRunnerSettings, CONFIG_KEY
+    return get_config_model(
+        config_path=config_path,
+        config_key=CONFIG_KEY,
+        config_model_class=QualibrateRunnerSettings,
+        config=STORAGE,
     )
-    if qrs is None:
-        raise RuntimeError("Couldn't read config file")
-    return qrs
