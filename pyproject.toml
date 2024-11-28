@@ -6,7 +6,7 @@ authors = ["Quantum Machines <info@quantum-machines.co>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9,<3.13"
 fastapi = "^0.115.2"
 uvicorn = "^0.32.0"
 pydantic-settings = "^2.2.1"
@@ -21,8 +21,8 @@ qualibrary = ["qualibrate-core"]
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.10.0"
-ruff = "^0.7.0"
-poethepoet = "^0.26.1"
+ruff = "^0.8.0"
+poethepoet = "^0.31.1"
 
 #[tool.poetry.group.qm-dev.dependencies]
 #qualibrate-core = {path = "../qualibrate-core", optional = true}
@@ -36,7 +36,7 @@ strict = true
 warn_return_any = true
 
 [[tool.mypy.overrides]]
-module = ["jsonpatch", "jsonpointer", "qualibrate.*", "qualibrate_app.*"]
+module = ["jsonpatch", "jsonpointer", "qualibrate.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
