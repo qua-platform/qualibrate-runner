@@ -1,4 +1,4 @@
-from .models import QualibrateRunnerSettings, State
+from .models import State
 from .resolvers import get_config_path, get_settings
 from .vars import (
     CONFIG_KEY,
@@ -11,7 +11,6 @@ __all__ = [
     "DEFAULT_QUALIBRATE_RUNNER_CONFIG_FILENAME",
     "CONFIG_PATH_ENV_NAME",
     "State",
-    "QualibrateRunnerSettings",
     "get_config_path",
     "get_settings",
 ]

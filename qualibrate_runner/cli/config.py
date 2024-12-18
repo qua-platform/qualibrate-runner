@@ -8,15 +8,16 @@ import click
 import tomli_w
 from click.core import ParameterSource
 from qualibrate_config.file import get_config_file
-from qualibrate_config.validation import get_config_model_or_print_error
+from qualibrate_config.models.calibration_library import (
+    CalibrationLibraryConfig,
+)
 from qualibrate_config.vars import DEFAULT_CONFIG_FILENAME, QUALIBRATE_PATH
 
-from qualibrate_runner.config import (
+from qualibrate_runner.config.vars import (
     CONFIG_KEY as QUALIBRATE_RUNNER_CONFIG_KEY,
 )
-from qualibrate_runner.config import (
+from qualibrate_runner.config.vars import (
     DEFAULT_QUALIBRATE_RUNNER_CONFIG_FILENAME,
-    QualibrateRunnerSettings,
 )
 
 if sys.version_info[:2] < (3, 11):
@@ -49,7 +50,7 @@ def get_config(config_path: Path) -> tuple[dict[str, Any], Path]:
 def _config_from_sources(
     ctx: click.Context, from_file: dict[str, Any]
 ) -> dict[str, Any]:
-    config_keys = QualibrateRunnerSettings.model_fields.keys()
+    config_keys = CalibrationLibraryConfig.get_annotations()
     runner_mapping: dict[str, str] = {k: k for k in config_keys}
     for arg_key, arg_value in ctx.params.items():
         not_default_arg = not_default(ctx, arg_key)
@@ -63,7 +64,7 @@ def _config_from_sources(
 def write_config(
     config_file: Path,
     common_config: dict[str, Any],
-    qrs: QualibrateRunnerSettings,
+    qrs: CalibrationLibraryConfig,
     confirm: bool = True,
 ) -> None:
     exported_data = qrs.model_dump(mode="json")
@@ -153,18 +154,19 @@ def config_command(
     calibration_library_folder: Path,
 ) -> None:
     common_config, config_file = get_config(config_path)
-    runner_config = (
-        common_config.get(QUALIBRATE_RUNNER_CONFIG_KEY, {})
-        if not overwrite
-        else {}
-    )
-    runner_config = _config_from_sources(ctx, runner_config)
-
-    qrs = get_config_model_or_print_error(
-        runner_config,
-        QualibrateRunnerSettings,
-        QUALIBRATE_RUNNER_CONFIG_KEY,
-    )
-    if qrs is None:
-        return
-    write_config(config_file, common_config, qrs, confirm=not auto_accept)
+    # TODO: write config
+    # runner_config = (
+    #     common_config.get(QUALIBRATE_RUNNER_CONFIG_KEY, {})
+    #     if not overwrite
+    #     else {}
+    # )
+    # runner_config = _config_from_sources(ctx, runner_config)
+    #
+    # qrs = get_config_model_or_print_error(
+    #     runner_config,
+    #     QualibrateRunnerSettings,
+    #     QUALIBRATE_RUNNER_CONFIG_KEY,
+    # )
+    # if qrs is None:
+    #     return
+    # write_config(config_file, common_config, qrs, confirm=not auto_accept)
