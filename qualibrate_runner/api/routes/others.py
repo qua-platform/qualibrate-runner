@@ -1,7 +1,12 @@
 from collections.abc import Mapping
-from typing import Annotated, Optional, cast
+from datetime import datetime
+from functools import partial
+from itertools import islice
+from pathlib import Path
+from typing import Annotated, Any, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from qualibrate_config.models import QualibrateConfig
 
 from qualibrate_runner.api.dependencies import (
     get_state,
@@ -9,11 +14,13 @@ from qualibrate_runner.api.dependencies import (
 from qualibrate_runner.config import (
     State,
 )
+from qualibrate_runner.config.resolvers import get_settings
 from qualibrate_runner.core.models.last_run import (
     LastRun,
     RunStatus,
     StateUpdate,
 )
+from qualibrate_runner.utils.logs_parser import filter_log_date, parse_log_line
 
 others_router = APIRouter()
 
@@ -23,6 +30,31 @@ def check_running(
     state: Annotated[State, Depends(get_state)],
 ) -> bool:
     return state.is_running
+
+
+@others_router.get("/output_logs")
+def get_output_logs(
+    after: datetime,
+    num_entries: int = 100,
+    *,
+    config: Annotated[QualibrateConfig, Depends(get_settings)],
+) -> list[dict[str, Any]]:
+    log_folder = config.log_folder
+    if log_folder is None:
+        return []
+    out_logs: list[dict[str, Any]] = []
+    q_log_files = filter(Path.is_file, log_folder.iterdir())
+    filter_log_date_after = partial(filter_log_date, after=after)
+    for log_file in sorted(q_log_files, reverse=True):
+        with open(log_file) as f:
+            lines_after_date = filter(
+                filter_log_date_after, map(parse_log_line, f)
+            )
+            file_logs = islice(lines_after_date, num_entries - len(out_logs))
+            out_logs.extend(file_logs)
+            if len(out_logs) == num_entries:
+                return out_logs
+    return out_logs
 
 
 @others_router.post("/stop")
