@@ -10,12 +10,9 @@ from qualibrate.models.run_summary.node import NodeRunSummary
 from qualibrate.qualibration_library import QualibrationLibrary
 
 from qualibrate_runner.config import State
-from qualibrate_runner.core.models.last_run import (
-    LastRun,
-    RunError,
-    RunnableType,
-    RunStatus,
-)
+from qualibrate_runner.core.models.common import RunError
+from qualibrate_runner.core.models.enums import RunnableType, RunStatusEnum
+from qualibrate_runner.core.models.last_run import LastRun
 from qualibrate_runner.core.types import QGraphType, QLibraryType, QNodeType
 
 
@@ -41,32 +38,31 @@ def run_node(
     state: State,
 ) -> None:
     state.run_item = node
-    run_status = RunStatus.RUNNING
+    run_status = RunStatusEnum.RUNNING
     state.last_run = LastRun(
         name=node.name,
-        status=RunStatus.RUNNING,
+        status=RunStatusEnum.RUNNING,
         idx=-1,
         passed_parameters=passed_input_parameters,
-        started_at=datetime.now(),
+        started_at=datetime.now().astimezone(),
         runnable_type=RunnableType.NODE,
     )
     idx = -1
     run_error = None
     try:
-        node, _ = node.run(**passed_input_parameters)
+        node.run(**passed_input_parameters)
     except Exception as ex:
-        run_status = RunStatus.ERROR
+        run_status = RunStatusEnum.ERROR
         run_error = RunError(
             error_class=ex.__class__.__name__,
             message=str(ex),
             traceback=traceback.format_tb(ex.__traceback__),
         )
-        run_status = RunStatus.ERROR
         raise
     else:
         _idx = node.snapshot_idx if hasattr(node, "snapshot_idx") else -1
         idx = _idx if _idx is not None else -1
-        run_status = RunStatus.FINISHED
+        run_status = RunStatusEnum.FINISHED
     finally:
         state.last_run = LastRun(
             name=state.last_run.name,
@@ -77,7 +73,7 @@ def run_node(
             runnable_type=state.last_run.runnable_type,
             passed_parameters=passed_input_parameters,
             started_at=state.last_run.started_at,
-            completed_at=datetime.now(),
+            completed_at=datetime.now().astimezone(),
             state_updates=node.state_updates,
             error=run_error,
         )
@@ -88,21 +84,21 @@ def run_workflow(
     passed_input_parameters: Mapping[str, Any],
     state: State,
 ) -> None:
-    run_status = RunStatus.RUNNING
+    run_status = RunStatusEnum.RUNNING
     state.last_run = LastRun(
         name=workflow.name,
         status=run_status,
         idx=-1,
-        started_at=datetime.now(),
+        started_at=datetime.now().astimezone(),
         runnable_type=RunnableType.GRAPH,
         passed_parameters=passed_input_parameters,
     )
-    state.run_item = workflow
     idx = -1
     run_error = None
     try:
         library = get_active_library_or_error()
-        workflow = library.graphs[workflow.name]
+        workflow = library.graphs[workflow.name]  # copied graph instance
+        state.run_item = workflow
         input_parameters = workflow.full_parameters_class(
             **passed_input_parameters
         )
@@ -111,7 +107,7 @@ def run_workflow(
             **input_parameters.parameters.model_dump(),
         )
     except Exception as ex:
-        run_status = RunStatus.ERROR
+        run_status = RunStatusEnum.ERROR
         run_error = RunError(
             error_class=ex.__class__.__name__,
             message=str(ex),
@@ -121,7 +117,7 @@ def run_workflow(
     else:
         idx = workflow.snapshot_idx if hasattr(workflow, "snapshot_idx") else -1
         idx = idx if idx is not None else -1
-        run_status = RunStatus.FINISHED
+        run_status = RunStatusEnum.FINISHED
     finally:
         state.last_run = LastRun(
             name=state.last_run.name,
@@ -129,13 +125,8 @@ def run_workflow(
             idx=idx,
             run_result=cast(Optional[GraphRunSummary], workflow.run_summary),
             started_at=state.last_run.started_at,
-            completed_at=datetime.now(),
+            completed_at=datetime.now().astimezone(),
             runnable_type=state.last_run.runnable_type,
             passed_parameters=passed_input_parameters,
-            state_updates=(
-                workflow.state_updates
-                if hasattr(workflow, "state_updates")
-                else {}
-            ),
             error=run_error,
         )
