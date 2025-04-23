@@ -58,7 +58,6 @@ def run_node(
             message=str(ex),
             traceback=traceback.format_tb(ex.__traceback__),
         )
-        raise
     else:
         _idx = node.snapshot_idx if hasattr(node, "snapshot_idx") else -1
         idx = _idx if _idx is not None else -1
@@ -113,7 +112,6 @@ def run_workflow(
             message=str(ex),
             traceback=traceback.format_tb(ex.__traceback__),
         )
-        raise
     else:
         idx = workflow.snapshot_idx if hasattr(workflow, "snapshot_idx") else -1
         idx = idx if idx is not None else -1
