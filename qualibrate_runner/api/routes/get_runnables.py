@@ -31,9 +31,10 @@ def get_nodes(
 def get_graphs(
     graphs: Annotated[RunnableCollection[str, QNodeType], Depends(get_qgraphs)],
     cytoscape: bool = False,
+    reactflow: bool = False,
 ) -> Mapping[str, Any]:
     return {
-        graph_name: graph.serialize(cytoscape=cytoscape)
+        graph_name: graph.serialize(cytoscape=cytoscape, reactflow=reactflow)
         for graph_name, graph in graphs.items_nocopy()
     }
 
